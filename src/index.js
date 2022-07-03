@@ -1,17 +1,13 @@
 import express from "express";
 import cors from "cors";
-import { registerUser, loginUser, postsUser } from "./controllers/userController.js";
+import postsRouter from "./routes/postsRouter.js";
+import authRouter from "./routes/authRouter.js";
 
 const app = express();
-app.use(express.json(),cors());
+app.use(express.json(), cors());
 
 // Routes
-
-app.post("/cadastro", registerUser);
-
-app.post("/login", loginUser);
-
-app.get("/posts", postsUser);
-
+app.use(postsRouter);
+app.use(authRouter);
 
 app.listen(5000);
