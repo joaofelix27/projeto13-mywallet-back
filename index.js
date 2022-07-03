@@ -3,7 +3,7 @@ import cors from "cors";
 import { MongoClient, ObjectId } from "mongodb";
 import joi from "joi";
 import bcrypt from "bcrypt";
-import {v4 as uuid} from 'uuid'
+import { v4 as uuid } from "uuid";
 
 const app = express();
 app.use(express.json());
@@ -23,7 +23,13 @@ let db;
 mongoClient.connect().then(() => {
   db = mongoClient.db("banco_de_dados_wallet");
 });
-app.post("/cadastro", async (req, res) => {
+app.post("/cadastro", registerUser);
+
+app.post("/login", loginUser);
+
+app.get("/posts", postsUser);
+
+async function registerUser(req, res) {
   let { email, name, password } = req.body;
   const { error } = userSchema.validate(req.body);
 
@@ -50,8 +56,8 @@ app.post("/cadastro", async (req, res) => {
     console.error(error);
     res.sendStatus(500);
   }
-});
-app.post("/login", async (req, res) => {
+}
+async function loginUser(req, res) {
   let { email, password } = req.body;
   const userSchema = joi.object({
     email: joi.string().email().required(),
@@ -65,15 +71,15 @@ app.post("/login", async (req, res) => {
   }
   try {
     const loginData = await db.collection("users").findOne({ email: email });
-    const verifyPassword =bcrypt.compareSync(password,loginData.password)
+    const verifyPassword = bcrypt.compareSync(password, loginData.password);
     if (loginData.length !== 0) {
       if (email == loginData.email && verifyPassword) {
-        const token = uuid()
-        await db.collection('sessions').insertOne({
+        const token = uuid();
+        await db.collection("sessions").insertOne({
           token,
-          userId: loginData._id
-        })
-        res.status(200).send({token});
+          userId: loginData._id,
+        });
+        res.status(200).send({ token });
       } else {
         res.status(401).send("E-mail ou senha inválidos!");
       }
@@ -84,24 +90,23 @@ app.post("/login", async (req, res) => {
     console.error(error);
     res.sendStatus(500);
   }
-});
-
-app.get ("/posts", async (req,res) => {
-const {authorization}= req.headers
-const token = authorization?.replace('Bearer ','')
-
-// Verify if the token is valid
-const session =  await db.collection("sessions").findOne({token})
-
-if (!session) {
-  return res.status(404).send("Token inválido");
 }
+async function postsUser(req, res) {
+  const { authorization } = req.headers;
+  const token = authorization?.replace("Bearer ", "");
 
-const activeUser= await db.collection("users").findOne({_id: new ObjectId(session.userId) })
-console.log(activeUser)
+  // Verify if the token is valid
+  const session = await db.collection("sessions").findOne({ token });
 
-res.send(activeUser)
+  if (!session) {
+    return res.status(404).send("Token inválido");
+  }
 
-})
+  const activeUser = await db
+    .collection("users")
+    .findOne({ _id: new ObjectId(session.userId) });
+  console.log(activeUser);
+
+  res.send(activeUser);
+}
 app.listen(5000);
- 
