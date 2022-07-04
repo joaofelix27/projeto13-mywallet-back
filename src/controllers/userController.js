@@ -30,6 +30,7 @@ export   async function loginUser(req, res) {
     let { email, password } = req.body;
     try {
       const loginData = await db.collection("users").findOne({ email: email });
+      const name= loginData.name
       const verifyPassword = bcrypt.compareSync(password, loginData.password);
       if (loginData.length !== 0) {
         if (email == loginData.email && verifyPassword) {
@@ -38,7 +39,7 @@ export   async function loginUser(req, res) {
             token,
             userId: loginData._id,
           });
-          res.status(200).send({ token });
+          res.status(200).send({ token, name});
         } else {
           res.status(401).send("E-mail ou senha inválidos!");
         }

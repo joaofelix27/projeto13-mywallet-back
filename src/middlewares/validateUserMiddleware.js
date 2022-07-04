@@ -13,8 +13,6 @@ async function validateUser(req, res, next) {
   const activeUser = await db
     .collection("users")
     .findOne({ _id: new objectId(session.userId) });
-  console.log(activeUser);
-
   if (!activeUser) {
     return res.sendStatus(401);
   }
