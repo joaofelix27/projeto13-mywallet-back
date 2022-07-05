@@ -10,4 +10,7 @@ app.use(express.json(), cors());
 app.use(authRouter);
 app.use(postsRouter);
 
-app.listen(5000);
+// app.listen(5000);
+app.listen(process.env.PORT, () => {
+    console.log("Server running on port " + process.env.PORT);
+});
